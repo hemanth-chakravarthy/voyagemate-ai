@@ -11,13 +11,14 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# Create a non-root user for security (Hugging Face requirement)
+# Create a non-root user
 RUN useradd -m -u 1000 user
 USER user
 ENV PATH="/home/user/.local/bin:$PATH"
 
-# Copy the requirements file
-COPY --chown=user requirements.txt .
+# Copy the environment setup files first
+# This allows pip to install the project if -e . is present
+COPY --chown=user requirements.txt setup.py pyproject.toml* ./
 
 # Install dependencies
 RUN pip install --no-cache-dir --user -r requirements.txt
