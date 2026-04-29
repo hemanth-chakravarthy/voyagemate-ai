@@ -7,11 +7,20 @@
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-VoyageMate AI is an agentic AI-powered travel planner that generates personalized itineraries, real-time weather insights, place recommendations, and detailed cost breakdowns. It uses a ReAct-based LangGraph workflow to orchestrate multiple external APIs through a FastAPI backend, with a Streamlit frontend for user interaction.
+ VoyageMate AI is an agentic AI-powered travel planner that generates personalized itineraries, real-time weather insights, place recommendations, and detailed cost breakdowns. It uses a ReAct-based LangGraph workflow to orchestrate multiple external APIs through a FastAPI backend, with a Streamlit frontend for user interaction.
 
-**Live Demo:** [voyagemate-frontend.onrender.com](https://voyagemate-frontend.onrender.com)
+## 🚀 Deployment (Hugging Face Spaces)
 
----
+This project is configured to run on Hugging Face Spaces using Docker.
+
+1. **Create a Docker Space** on Hugging Face.
+2. **Set Secret Variables** in Settings:
+   - `GROQ_API_KEY`: Your Groq API Key.
+   - `QDRANT_API_KEY`: Your Qdrant Cloud API Key.
+   - `OPENWEATHER_API_KEY`: Your OpenWeather API Key.
+   - `FOURSQUARE_API_KEY`: Your Foursquare API Key.
+3. **Upload all files** (including `Dockerfile`).
+
 
 ## Features
 

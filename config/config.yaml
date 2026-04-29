@@ -8,9 +8,11 @@ llm:
     model_name: "llama-3.1-8b-instant"
 
 vector_store:
-  qdrant_url: "http://localhost:6333"
+  qdrant_url: "https://8b2ecbce-bc96-41e3-8c7c-b4da16b03d3e.us-west-2-0.aws.cloud.qdrant.io"
+  qdrant_api_key: "${QDRANT_API_KEY}"
   collection_name: "voyagemate_memory"
   embeddings_model: "all-MiniLM-L6-v2"
+
 
 rag:
   knowledge_collection: "voyagemate_knowledge"

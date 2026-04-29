@@ -19,13 +19,15 @@ class SemanticCache:
 
         self.enabled = cache_cfg.get("enabled", True)
         self.qdrant_url = vs_cfg.get("qdrant_url", "http://localhost:6333")
+        self.qdrant_api_key = os.environ.get("QDRANT_API_KEY") or vs_cfg.get("qdrant_api_key")
         self.collection_name = cache_cfg.get("collection_name", "voyagemate_semantic_cache")
         self.embeddings_model = vs_cfg.get("embeddings_model", "all-MiniLM-L6-v2")
         self.threshold = cache_cfg.get("threshold", 0.85)
         self.min_query_length = cache_cfg.get("min_query_length", 10)
 
         self.embeddings = HuggingFaceEmbeddings(model_name=self.embeddings_model)
-        self.client = QdrantClient(url=self.qdrant_url)
+        self.client = QdrantClient(url=self.qdrant_url, api_key=self.qdrant_api_key)
+
         
         if self.enabled:
             self._ensure_collection()

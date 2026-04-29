@@ -19,11 +19,13 @@ class VectorStore:
         config = load_config()
         vs_cfg = config.get("vector_store", {})
         self.qdrant_url = vs_cfg.get("qdrant_url", "http://localhost:6333")
+        self.qdrant_api_key = os.environ.get("QDRANT_API_KEY") or vs_cfg.get("qdrant_api_key")
         self.collection_name = vs_cfg.get("collection_name", "voyagemate_memory")
         self.embeddings_model = vs_cfg.get("embeddings_model", "all-MiniLM-L6-v2")
 
         self.embeddings = HuggingFaceEmbeddings(model_name=self.embeddings_model)
-        self.client = QdrantClient(url=self.qdrant_url)
+        self.client = QdrantClient(url=self.qdrant_url, api_key=self.qdrant_api_key)
+
         self._ensure_collection()
         self.vector_db = QdrantVectorStore(
             client=self.client,
