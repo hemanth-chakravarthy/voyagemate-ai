@@ -1,3 +1,12 @@
+---
+title: VoyagemateAI
+emoji: 🌍
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+pinned: false
+---
+
 # VoyageMate AI
 
 ![Streamlit](https://img.shields.io/badge/Frontend-Streamlit-FF4B4B?logo=streamlit)
