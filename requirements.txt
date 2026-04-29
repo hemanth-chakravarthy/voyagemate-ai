@@ -19,6 +19,7 @@ langchain_openai
 langgraph
 langchain-google-community[places]
 protobuf>=6.31.1
+sentence-transformers
 
 
 -e .
