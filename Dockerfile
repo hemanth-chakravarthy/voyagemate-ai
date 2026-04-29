@@ -1,35 +1,34 @@
-# Use an official Python runtime as a parent image
+# Use Python 3.11-slim
 FROM python:3.11-slim
 
-# Set the working directory in the container
+# Set the working directory
 WORKDIR /app
 
-# Install system dependencies
+# Install basic system dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
     curl \
-    software-properties-common \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy the requirements file into the container
-COPY requirements.txt .
+# Create a non-root user for security (Hugging Face requirement)
+RUN useradd -m -u 1000 user
+USER user
+ENV PATH="/home/user/.local/bin:$PATH"
 
-# Install any needed packages specified in requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy the requirements file
+COPY --chown=user requirements.txt .
 
-# Copy the current directory contents into the container at /app
-COPY . .
+# Install dependencies
+RUN pip install --no-cache-dir --user -r requirements.txt
 
-# Set environment variables
-ENV PYTHONUNBUFFERED=1
-ENV PORT=7860
+# Copy the rest of the application
+COPY --chown=user . .
 
-# Expose the port Streamlit will run on
+# Expose port 7860
 EXPOSE 7860
 
-# Create a start script to run both FastAPI and Streamlit
-# We run FastAPI on 8000 and Streamlit on 7860
+# Create a start script
 RUN echo '#!/bin/bash\n\
 python -m uvicorn main:app --host 0.0.0.0 --port 8000 &\n\
 python -m streamlit run streamlit_app.py --server.port 7860 --server.address 0.0.0.0\n\
