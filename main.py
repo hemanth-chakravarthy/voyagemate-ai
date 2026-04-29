@@ -13,13 +13,21 @@ import re
 
 load_dotenv()
 from utils.semantic_cache import SemanticCache
-from logger.logging import log_cache_event
+from logger.logging import log_cache_event, log_security_event
+
+from utils.security import sanitize_input, check_safety, RateLimiter
 
 app = FastAPI()
 
+_config = load_config()
+_perf = _config.get("performance", {})
+_limiter = RateLimiter(requests_per_minute=int(_perf.get("requests_per_minute", 5)))
+
+
 class SimpleTTLCache:
-    def __init__(self, ttl_seconds: int = 300):
+    def __init__(self, ttl_seconds: int = 300, max_size: int = 1000):
         self.ttl_seconds = ttl_seconds
+        self.max_size = max_size
         self._store = {}
 
     def get(self, key):
@@ -33,20 +41,40 @@ class SimpleTTLCache:
         return value
 
     def set(self, key, value):
+        if len(self._store) >= self.max_size:
+            # Evict oldest entry (basic FIFO)
+            oldest_key = next(iter(self._store))
+            self._store.pop(oldest_key)
         self._store[key] = (value, time.time())
 
 
 _config = load_config()
 _perf = _config.get("performance", {})
-_response_cache = SimpleTTLCache(int(_perf.get("response_cache_ttl_seconds", 300)))
+_response_cache = SimpleTTLCache(
+    int(_perf.get("response_cache_ttl_seconds", 300)),
+    max_size=int(_perf.get("max_cache_size", 1000))
+)
 
+# Tighten CORS in production
+allowed_origins = os.environ.get("ALLOWED_ORIGINS", "*").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # tighten in production
+    allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
+
+@app.middleware("http")
+async def add_security_headers(request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    return response
+
+
 
 # Global stats for semantic cache
 cache_stats = {
@@ -345,7 +373,22 @@ async def query_travel_agent(query: QueryRequest):
     log_data = {"mode": "", "cache_hit": False, "rag_time": 0, "tool_time": 0, "llm_time": 0, "total": 0}
 
     try:
+        # 0) Rate Limiting
+        user_id = query.user_id or "anonymous"
+        if not _limiter.is_allowed(user_id):
+            log_security_event("rate_limit_exceeded", user_id, {"question": query.question})
+            return JSONResponse(status_code=429, content={"error": "Too many requests. Please wait a minute."})
+
+        # 1) Input Sanitization & Safety
+        query.question = sanitize_input(query.question)
+        is_safe, reason = check_safety(query.question)
+        if not is_safe:
+            log_security_event("safety_violation", user_id, {"reason": reason, "question": query.question})
+            return JSONResponse(status_code=400, content={"error": f"Invalid request: {reason}"})
+
+
         actual_mode = _select_mode(query.question)
+
         log_data["mode"] = actual_mode
 
         # If full mode, try to extract destination for tools
@@ -513,8 +556,14 @@ async def query_travel_agent(query: QueryRequest):
         return JSONResponse(status_code=200, content=structured)
     except Exception as e:
         import traceback
-        traceback.print_exc()
-        return JSONResponse(status_code=500, content={"error": str(e)})
+        # Log full traceback internally for debugging
+        error_msg = f"ERROR: {str(e)}\n{traceback.format_exc()}"
+        print(error_msg)
+        return JSONResponse(
+            status_code=500, 
+            content={"error": "An unexpected error occurred while processing your request. Please try again later."}
+        )
+
 
 @app.post("/feedback")
 async def submit_feedback(payload: FeedbackRequest):

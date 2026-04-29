@@ -17,8 +17,9 @@ import time
 
 
 class SimpleTTLCache:
-    def __init__(self, ttl_seconds: int = 300):
+    def __init__(self, ttl_seconds: int = 300, max_size: int = 500):
         self.ttl_seconds = ttl_seconds
+        self.max_size = max_size
         self._store = {}
 
     def get(self, key):
@@ -32,7 +33,12 @@ class SimpleTTLCache:
         return value
 
     def set(self, key, value):
+        if len(self._store) >= self.max_size:
+            # Basic eviction
+            oldest_key = next(iter(self._store))
+            self._store.pop(oldest_key)
         self._store[key] = (value, time.time())
+
 
 class GraphBuilder():
     def __init__(self,model_provider: str = "groq"):

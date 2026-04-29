@@ -17,4 +17,14 @@ def log_cache_event(event_type: str, data: dict):
         "event": event_type,
         **data
     }
-    logger.info(json.dumps(log_entry))
+
+def log_security_event(event_type: str, user_id: str, details: dict):
+    """Logs a structured security event."""
+    log_entry = {
+        "timestamp": datetime.utcnow().isoformat(),
+        "type": "SECURITY",
+        "event": event_type,
+        "user_id": user_id,
+        **details
+    }
+    logger.warning(json.dumps(log_entry))

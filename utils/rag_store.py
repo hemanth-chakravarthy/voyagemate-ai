@@ -24,8 +24,15 @@ class RAGStore:
         vs_cfg = config.get("vector_store", {})
         rag_cfg = config.get("rag", {})
         self.qdrant_url = vs_cfg.get("qdrant_url", "http://localhost:6333")
-        self.qdrant_api_key = os.environ.get("QDRANT_API_KEY") or vs_cfg.get("qdrant_api_key")
+        raw_api_key = vs_cfg.get("qdrant_api_key", "")
+        if raw_api_key and raw_api_key.startswith("${") and raw_api_key.endswith("}"):
+            env_var = raw_api_key[2:-1]
+            self.qdrant_api_key = os.environ.get(env_var)
+        else:
+            self.qdrant_api_key = os.environ.get("QDRANT_API_KEY") or raw_api_key
+
         self.collection_name = rag_cfg.get("knowledge_collection", "voyagemate_knowledge")
+
         self.embeddings_model = vs_cfg.get("embeddings_model", "all-MiniLM-L6-v2")
         self.chunk_size = int(rag_cfg.get("chunk_size", 800))
         self.chunk_overlap = int(rag_cfg.get("chunk_overlap", 120))
