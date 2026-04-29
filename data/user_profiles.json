@@ -1,0 +1,44 @@
+{
+  "user_123": {
+    "budget_range": "mid",
+    "travel_style": "backpacking",
+    "preferred_places": [],
+    "food_preference": "veg",
+    "user_id": "user_123"
+  },
+  "imperialx": {
+    "budget_range": "high",
+    "travel_style": "luxury",
+    "preferred_places": [
+      "beach",
+      "mountains"
+    ],
+    "food_preference": "veg",
+    "user_id": "imperialx"
+  },
+  "user_6": {
+    "budget_range": "mid",
+    "travel_style": "backpacking",
+    "preferred_places": [
+      "Temples"
+    ],
+    "food_preference": "veg",
+    "user_id": "user_6"
+  },
+  "user_8": {
+    "budget_range": "high",
+    "travel_style": "backpacking",
+    "preferred_places": [
+      "church"
+    ],
+    "food_preference": "non-veg",
+    "user_id": "user_8"
+  },
+  "imperial1234": {
+    "budget_range": "high",
+    "travel_style": "luxury",
+    "preferred_places": [],
+    "food_preference": "non-veg",
+    "user_id": "imperial1234"
+  }
+}

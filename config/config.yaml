@@ -6,3 +6,26 @@ llm:
   groq:
     provider: "groq"
     model_name: "llama-3.1-8b-instant"
+
+vector_store:
+  qdrant_url: "http://localhost:6333"
+  collection_name: "voyagemate_memory"
+  embeddings_model: "all-MiniLM-L6-v2"
+
+rag:
+  knowledge_collection: "voyagemate_knowledge"
+  chunk_size: 800
+  chunk_overlap: 120
+
+performance:
+  rag_k: 2
+  memory_k: 2
+  context_truncate: 600
+  response_cache_ttl_seconds: 300
+  semantic_cache:
+    enabled: true
+    collection_name: "voyagemate_semantic_cache"
+    threshold: 0.85
+    min_query_length: 10
+    estimated_cost_per_call: 0.02  # in USD
+

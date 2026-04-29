@@ -1,6 +1,5 @@
-# place_info_search.py
 import os
-import requests
+import httpx
 from langchain_tavily import TavilySearch
 
 class FoursquarePlaceSearchTool:
@@ -21,7 +20,7 @@ class FoursquarePlaceSearchTool:
             "Authorization": self.api_key
         }
 
-    def _search(self, query: str = None, near: str = None, ll: str = None, limit: int = 10, categories: str = None):
+    async def _search(self, query: str = None, near: str = None, ll: str = None, limit: int = 10, categories: str = None):
         """
         Generic search wrapper.
         - query: text query
@@ -40,26 +39,30 @@ class FoursquarePlaceSearchTool:
             params["categories"] = categories
 
         url = f"{self.base_url}/search"
-        resp = requests.get(url, headers=self.headers, params=params, timeout=10)
-        resp.raise_for_status()
-        return resp.json()
+        try:
+            async with httpx.AsyncClient(timeout=3.0) as client:
+                resp = await client.get(url, headers=self.headers, params=params)
+                resp.raise_for_status()
+                return resp.json()
+        except Exception:
+            return {}
 
-    def search_restaurants(self, place: str, limit: int = 10):
+    async def search_restaurants(self, place: str, limit: int = 10):
         """Search restaurants in a place (query-based)."""
         # Query "restaurant" generally returns restaurants. You can tune categories if needed.
-        return self._search(query="restaurant", near=place, limit=limit)
+        return await self._search(query="restaurant", near=place, limit=limit)
 
-    def search_attractions(self, place: str, limit: int = 10):
+    async def search_attractions(self, place: str, limit: int = 10):
         """Search tourist attractions / points of interest."""
-        return self._search(query="attraction|tourist attraction|sightseeing", near=place, limit=limit)
+        return await self._search(query="attraction|tourist attraction|sightseeing", near=place, limit=limit)
 
-    def search_activities(self, place: str, limit: int = 10):
+    async def search_activities(self, place: str, limit: int = 10):
         """Search activities (tours, outdoor activities, experiences)."""
-        return self._search(query="activities|things to do|tours", near=place, limit=limit)
+        return await self._search(query="activities|things to do|tours", near=place, limit=limit)
 
-    def search_transportation(self, place: str, limit: int = 10):
+    async def search_transportation(self, place: str, limit: int = 10):
         """Search for transport-related POIs (train stations, bus stations, airports)."""
-        return self._search(query="airport|train station|bus station|metro", near=place, limit=limit)
+        return await self._search(query="airport|train station|bus station|metro", near=place, limit=limit)
 
 
 class LocationIQTool:
@@ -76,23 +79,31 @@ class LocationIQTool:
         self.geocode_url = "https://us1.locationiq.com/v1"
         self.directions_base = "https://us1.locationiq.com/v1/directions"
 
-    def forward_geocode(self, query: str, limit: int = 5):
+    async def forward_geocode(self, query: str, limit: int = 5):
         """Return forward geocoding results for `query`."""
         url = f"{self.geocode_url}/search.php"
         params = {"key": self.api_key, "q": query, "format": "json", "limit": limit}
-        resp = requests.get(url, params=params, timeout=10)
-        resp.raise_for_status()
-        return resp.json()
+        try:
+            async with httpx.AsyncClient(timeout=3.0) as client:
+                resp = await client.get(url, params=params)
+                resp.raise_for_status()
+                return resp.json()
+        except Exception:
+            return {}
 
-    def reverse_geocode(self, lat: float, lon: float):
+    async def reverse_geocode(self, lat: float, lon: float):
         """Reverse geocode lat/lon to address."""
         url = f"{self.geocode_url}/reverse.php"
         params = {"key": self.api_key, "lat": lat, "lon": lon, "format": "json"}
-        resp = requests.get(url, params=params, timeout=10)
-        resp.raise_for_status()
-        return resp.json()
+        try:
+            async with httpx.AsyncClient(timeout=3.0) as client:
+                resp = await client.get(url, params=params)
+                resp.raise_for_status()
+                return resp.json()
+        except Exception:
+            return {}
 
-    def get_directions(self, start_lat: float, start_lon: float, end_lat: float, end_lon: float, profile: str = "driving"):
+    async def get_directions(self, start_lat: float, start_lon: float, end_lat: float, end_lon: float, profile: str = "driving"):
         """
         Get directions from A -> B.
         Uses LocationIQ Directions API endpoint pattern:
@@ -102,9 +113,13 @@ class LocationIQTool:
         coords = f"{start_lon},{start_lat};{end_lon},{end_lat}"
         url = f"{self.directions_base}/{profile}/{coords}"
         params = {"key": self.api_key, "overview": "false", "steps": "true"}
-        resp = requests.get(url, params=params, timeout=10)
-        resp.raise_for_status()
-        return resp.json()
+        try:
+            async with httpx.AsyncClient(timeout=3.0) as client:
+                resp = await client.get(url, params=params)
+                resp.raise_for_status()
+                return resp.json()
+        except Exception:
+            return {}
 
 
 class TavilyPlaceSearchTool:

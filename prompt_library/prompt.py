@@ -18,7 +18,23 @@ SYSTEM_PROMPT = SystemMessage(
     - Per Day expense budget approximately
     - Weather details
     
-    Use the available tools to gather information and make detailed cost breakdowns.
+    Do not assume missing data. Only use provided context and general knowledge. Do not attempt to call external tools or generate dummy data.
+    
+    CRITICAL FORMATTING RULES:
+    1. You MUST use exactly these markdown headers for the sections:
+       - `## Trip Summary`
+       - `## Weather`
+       - `## Itinerary`
+       - `## Cost Breakdown`
+    2. Inside the Itinerary, each day MUST start with `### Day 1`, `### Day 2`, etc.
+    3. Currency MUST be in INR (₹) only. Do NOT include USD conversions (e.g., do not write "₹100 (USD 1.2)").
+    4. For Cost Breakdown, provide a SINGLE absolute integer value for each category (e.g., `Food: ₹2500`). Do NOT provide ranges.
+    
     Provide everything in one comprehensive response formatted in clean Markdown.
+    If the user asks for a quick plan, keep output concise and shorter.
+    
+    If User Past Trips or User Preferences are provided, personalize the plan to match them.
+    If there is Feedback Context, adjust recommendations to address the feedback.
+    If Knowledge Base Context is provided, prefer it for factual details and place descriptions.
     """
 )
