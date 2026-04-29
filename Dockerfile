@@ -11,17 +11,20 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# Create a non-root user
-RUN useradd -m -u 1000 user
+# Create a non-root user and set permissions early
+RUN useradd -m -u 1000 user && \
+    chown -R user:user /app
+
 USER user
 ENV PATH="/home/user/.local/bin:$PATH"
 
-# Copy the environment setup files first
-# This allows pip to install the project if -e . is present
-COPY --chown=user requirements.txt setup.py pyproject.toml* ./
+# Copy setup files first for caching
+COPY --chown=user requirements.txt setup.py pyproject.toml* README.md* ./
 
 # Install dependencies
-RUN pip install --no-cache-dir --user -r requirements.txt
+# We ignore the -e . if it fails or just install requirements normally
+RUN pip install --no-cache-dir --user -r requirements.txt || \
+    pip install --no-cache-dir --user $(grep -v '^-e' requirements.txt)
 
 # Copy the rest of the application
 COPY --chown=user . .
